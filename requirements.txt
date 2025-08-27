@@ -1,0 +1,25 @@
+# TM Setter Requirements
+# Python 3.8+
+
+# GUI Framework
+# tkinter는 Python 기본 내장
+
+# HTTP Client for API calls
+requests>=2.31.0
+
+# JSON handling (기본 내장)
+# json
+
+# Threading for async operations (기본 내장)
+# threading
+# queue
+
+# Configuration management
+python-dotenv>=1.0.0
+
+# Testing
+pytest>=7.4.0
+pytest-mock>=3.11.1
+
+# Optional: For better UI
+pillow>=10.0.0  # 이미지 처리용

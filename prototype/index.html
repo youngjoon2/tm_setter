@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TM Setter - GUI Prototype</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            width: 90%;
+            max-width: 500px;
+            min-height: 400px;
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .step-indicator {
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .step {
+            display: flex;
+            align-items: center;
+            margin: 0 10px;
+        }
+
+        .step-circle {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: #dee2e6;
+            color: #6c757d;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 8px;
+        }
+
+        .step.active .step-circle {
+            background: #667eea;
+            color: white;
+        }
+
+        .step.completed .step-circle {
+            background: #28a745;
+            color: white;
+        }
+
+        .content {
+            padding: 30px;
+            min-height: 300px;
+        }
+
+        .screen {
+            display: none;
+        }
+
+        .screen.active {
+            display: block;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #495057;
+        }
+
+        input[type="text"],
+        input[type="password"],
+        select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #dee2e6;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        input:focus,
+        select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .button-group {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 30px;
+        }
+
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5a67d8;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+
+        .btn-skip {
+            background: transparent;
+            color: #6c757d;
+            border: 2px solid #dee2e6;
+        }
+
+        .btn-skip:hover {
+            background: #f8f9fa;
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .error-message {
+            color: #dc3545;
+            font-size: 14px;
+            margin-top: 5px;
+            display: none;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .db-code-selectors {
+            display: grid;
+            gap: 20px;
+        }
+
+        .issue-list {
+            max-height: 300px;
+            overflow-y: auto;
+            border: 2px solid #dee2e6;
+            border-radius: 6px;
+        }
+
+        .issue-item {
+            padding: 12px;
+            border-bottom: 1px solid #dee2e6;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .issue-item:hover {
+            background: #f8f9fa;
+        }
+
+        .issue-item.selected {
+            background: #e7f1ff;
+            border-left: 3px solid #667eea;
+        }
+
+        .issue-key {
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .issue-summary {
+            color: #495057;
+            margin-top: 4px;
+            font-size: 14px;
+        }
+
+        .search-box {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .search-box input {
+            padding-left: 40px;
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #6c757d;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>TM Setter</h1>
+        </div>
+
+        <div class="step-indicator">
+            <div class="step active" id="step1">
+                <div class="step-circle">1</div>
+                <span>로그인</span>
+            </div>
+            <div class="step" id="step2">
+                <div class="step-circle">2</div>
+                <span>DB Code</span>
+            </div>
+            <div class="step" id="step3">
+                <div class="step-circle">3</div>
+                <span>Jira Issue</span>
+            </div>
+            <div class="step" id="step4">
+                <div class="step-circle">4</div>
+                <span>옵션</span>
+            </div>
+        </div>
+
+        <div class="content">
+            <!-- 로그인 화면 -->
+            <div class="screen active" id="login-screen">
+                <h2>로그인</h2>
+                <form id="login-form">
+                    <div class="form-group">
+                        <label for="user-id">사용자 ID</label>
+                        <input type="text" id="user-id" placeholder="ID를 입력하세요" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="password">비밀번호</label>
+                        <input type="password" id="password" placeholder="비밀번호를 입력하세요" required>
+                        <div class="error-message" id="login-error">ID 또는 비밀번호가 올바르지 않습니다.</div>
+                    </div>
+                    <div class="button-group">
+                        <div></div>
+                        <button type="submit" class="btn-primary">로그인</button>
+                    </div>
+                </form>
+                <div class="loading" id="login-loading">
+                    <div class="spinner"></div>
+                    <p style="margin-top: 10px;">인증 중...</p>
+                </div>
+            </div>
+
+            <!-- DB Code 선택 화면 -->
+            <div class="screen" id="db-code-screen">
+                <h2>DB Code 선택</h2>
+                <div class="db-code-selectors">
+                    <div class="form-group">
+                        <label for="db-item1">첫 번째 항목</label>
+                        <select id="db-item1" required>
+                            <option value="">선택하세요</option>
+                            <option value="opt1">옵션 1</option>
+                            <option value="opt2">옵션 2</option>
+                            <option value="opt3">옵션 3</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="db-item2">두 번째 항목</label>
+                        <select id="db-item2" required>
+                            <option value="">선택하세요</option>
+                            <option value="opt1">옵션 A</option>
+                            <option value="opt2">옵션 B</option>
+                            <option value="opt3">옵션 C</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="db-item3">세 번째 항목</label>
+                        <select id="db-item3" required>
+                            <option value="">선택하세요</option>
+                            <option value="opt1">항목 X</option>
+                            <option value="opt2">항목 Y</option>
+                            <option value="opt3">항목 Z</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="button-group">
+                    <button class="btn-secondary" onclick="goToScreen('login')">이전</button>
+                    <button class="btn-primary" id="db-next-btn" disabled onclick="goToScreen('jira')">다음</button>
+                </div>
+            </div>
+
+            <!-- Jira Issue 선택 화면 -->
+            <div class="screen" id="jira-screen">
+                <h2>Jira Issue 선택</h2>
+                <div class="search-box">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" id="issue-search" placeholder="Issue 검색...">
+                </div>
+                <div class="issue-list" id="issue-list">
+                    <div class="issue-item" data-key="PROJ-1234">
+                        <div class="issue-key">PROJ-1234</div>
+                        <div class="issue-summary">사용자 인증 기능 개선</div>
+                    </div>
+                    <div class="issue-item" data-key="PROJ-1235">
+                        <div class="issue-key">PROJ-1235</div>
+                        <div class="issue-summary">데이터베이스 연결 최적화</div>
+                    </div>
+                    <div class="issue-item" data-key="PROJ-1236">
+                        <div class="issue-key">PROJ-1236</div>
+                        <div class="issue-summary">UI 응답성 개선</div>
+                    </div>
+                    <div class="issue-item" data-key="PROJ-1237">
+                        <div class="issue-key">PROJ-1237</div>
+                        <div class="issue-summary">로깅 시스템 구현</div>
+                    </div>
+                    <div class="issue-item" data-key="PROJ-1238">
+                        <div class="issue-key">PROJ-1238</div>
+                        <div class="issue-summary">API 에러 핸들링 개선</div>
+                    </div>
+                </div>
+                <div class="button-group">
+                    <button class="btn-secondary" onclick="goToScreen('db-code')">이전</button>
+                    <button class="btn-primary" id="jira-next-btn" disabled onclick="goToScreen('options')">다음</button>
+                </div>
+            </div>
+
+            <!-- 옵션 설정 화면 -->
+            <div class="screen" id="options-screen">
+                <h2>옵션 설정 (선택사항)</h2>
+                <div class="form-group">
+                    <label for="repo-name">Repository Name</label>
+                    <input type="text" id="repo-name" placeholder="예: my-project-repo">
+                </div>
+                <div class="form-group">
+                    <label for="sw-version">바이너리 SW 버전</label>
+                    <select id="sw-version">
+                        <option value="">선택하세요</option>
+                        <option value="1.0.0">1.0.0</option>
+                        <option value="1.1.0">1.1.0</option>
+                        <option value="2.0.0">2.0.0</option>
+                        <option value="2.1.0">2.1.0 (최신)</option>
+                    </select>
+                </div>
+                <div class="button-group">
+                    <button class="btn-secondary" onclick="goToScreen('jira')">이전</button>
+                    <button class="btn-skip" onclick="complete(true)">건너뛰기</button>
+                    <button class="btn-primary" onclick="complete(false)">완료</button>
+                </div>
+                <div class="loading" id="complete-loading">
+                    <div class="spinner"></div>
+                    <p style="margin-top: 10px;">처리 중...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 현재 화면 상태
+        let currentScreen = 'login';
+        let selectedIssue = null;
+
+        // 로그인 폼 처리
+        document.getElementById('login-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const userId = document.getElementById('user-id').value;
+            const password = document.getElementById('password').value;
+            
+            // 로딩 표시
+            document.getElementById('login-form').style.display = 'none';
+            document.getElementById('login-loading').style.display = 'block';
+            
+            // 비동기 로그인 시뮬레이션
+            setTimeout(() => {
+                if (userId === 'admin' && password === 'admin') {
+                    goToScreen('db-code');
+                } else {
+                    document.getElementById('login-form').style.display = 'block';
+                    document.getElementById('login-loading').style.display = 'none';
+                    document.getElementById('login-error').style.display = 'block';
+                }
+            }, 1500);
+        });
+
+        // DB Code 선택 검증
+        document.querySelectorAll('#db-code-screen select').forEach(select => {
+            select.addEventListener('change', function() {
+                const item1 = document.getElementById('db-item1').value;
+                const item2 = document.getElementById('db-item2').value;
+                const item3 = document.getElementById('db-item3').value;
+                
+                const nextBtn = document.getElementById('db-next-btn');
+                if (item1 && item2 && item3) {
+                    nextBtn.disabled = false;
+                } else {
+                    nextBtn.disabled = true;
+                }
+            });
+        });
+
+        // Jira Issue 선택
+        document.querySelectorAll('.issue-item').forEach(item => {
+            item.addEventListener('click', function() {
+                // 이전 선택 제거
+                document.querySelectorAll('.issue-item').forEach(i => {
+                    i.classList.remove('selected');
+                });
+                
+                // 새 선택 추가
+                this.classList.add('selected');
+                selectedIssue = this.dataset.key;
+                document.getElementById('jira-next-btn').disabled = false;
+            });
+        });
+
+        // Issue 검색
+        document.getElementById('issue-search').addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase();
+            document.querySelectorAll('.issue-item').forEach(item => {
+                const key = item.querySelector('.issue-key').textContent.toLowerCase();
+                const summary = item.querySelector('.issue-summary').textContent.toLowerCase();
+                
+                if (key.includes(searchTerm) || summary.includes(searchTerm)) {
+                    item.style.display = 'block';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        });
+
+        // 화면 전환
+        function goToScreen(screen) {
+            // 모든 화면 숨기기
+            document.querySelectorAll('.screen').forEach(s => {
+                s.classList.remove('active');
+            });
+            
+            // 모든 스텝 인디케이터 초기화
+            document.querySelectorAll('.step').forEach(s => {
+                s.classList.remove('active');
+            });
+            
+            // 화면별 처리
+            switch(screen) {
+                case 'login':
+                    document.getElementById('login-screen').classList.add('active');
+                    document.getElementById('step1').classList.add('active');
+                    // 에러 메시지 숨기기
+                    document.getElementById('login-error').style.display = 'none';
+                    // 로딩 숨기기
+                    document.getElementById('login-loading').style.display = 'none';
+                    document.getElementById('login-form').style.display = 'block';
+                    break;
+                    
+                case 'db-code':
+                    document.getElementById('db-code-screen').classList.add('active');
+                    document.getElementById('step1').classList.add('completed');
+                    document.getElementById('step2').classList.add('active');
+                    break;
+                    
+                case 'jira':
+                    document.getElementById('jira-screen').classList.add('active');
+                    document.getElementById('step1').classList.add('completed');
+                    document.getElementById('step2').classList.add('completed');
+                    document.getElementById('step3').classList.add('active');
+                    // Jira 데이터 로드 시뮬레이션
+                    loadJiraIssues();
+                    break;
+                    
+                case 'options':
+                    document.getElementById('options-screen').classList.add('active');
+                    document.getElementById('step1').classList.add('completed');
+                    document.getElementById('step2').classList.add('completed');
+                    document.getElementById('step3').classList.add('completed');
+                    document.getElementById('step4').classList.add('active');
+                    break;
+            }
+            
+            currentScreen = screen;
+        }
+
+        // Jira 이슈 로드 (시뮬레이션)
+        function loadJiraIssues() {
+            // 실제로는 DB Code 기반으로 필터링된 이슈를 로드
+            console.log('Loading Jira issues based on selected DB codes...');
+        }
+
+        // 완료 처리
+        function complete(skip) {
+            const options = document.querySelector('#options-screen form') || 
+                          document.querySelector('#options-screen > div');
+            if (options) {
+                options.style.display = 'none';
+            }
+            document.querySelector('#options-screen .button-group').style.display = 'none';
+            document.getElementById('complete-loading').style.display = 'block';
+            
+            setTimeout(() => {
+                if (skip) {
+                    alert('작업을 완료했습니다. (옵션 건너뜀)');
+                } else {
+                    const repoName = document.getElementById('repo-name').value;
+                    const swVersion = document.getElementById('sw-version').value;
+                    alert(`작업을 완료했습니다.\nRepository: ${repoName || '없음'}\nSW 버전: ${swVersion || '없음'}`);
+                }
+                // 초기 화면으로
+                location.reload();
+            }, 2000);
+        }
+    </script>
+</body>
+</html>
