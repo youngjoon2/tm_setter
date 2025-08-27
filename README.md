@@ -44,14 +44,24 @@ pip install -r requirements.txt
 
 ## 실행
 
-### 방법 1: 실행 스크립트 사용
+### Windows
 ```bash
-./run_gui.sh
+# 방법 1: 배치 파일 (더블클릭 가능)
+run_gui.bat
+
+# 방법 2: PowerShell
+.\run_gui.ps1
+
+# 방법 3: 명령 프롬프트
+python src\main.py
 ```
 
-### 방법 2: Python 직접 실행
+### macOS/Linux
 ```bash
-cd tm_setter
+# 방법 1: Shell 스크립트
+./run_gui.sh
+
+# 방법 2: Python 직접 실행
 python3 src/main.py
 ```
 
