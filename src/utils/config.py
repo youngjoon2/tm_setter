@@ -137,17 +137,20 @@ class SessionManager:
     def __init__(self):
         self.session_data: Dict[str, Any] = {}
         self.user_id: Optional[str] = None
+        self.user_name: Optional[str] = None
         self.is_authenticated: bool = False
         
-    def login(self, user_id: str, **kwargs):
+    def login(self, user_id: str, user_name: str = None, **kwargs):
         """로그인 처리"""
         self.user_id = user_id
+        self.user_name = user_name or user_id
         self.is_authenticated = True
         self.session_data.update(kwargs)
         
     def logout(self):
         """로그아웃 처리"""
         self.user_id = None
+        self.user_name = None
         self.is_authenticated = False
         self.session_data.clear()
         
@@ -158,3 +161,13 @@ class SessionManager:
     def set(self, key: str, value: Any):
         """세션 데이터 설정"""
         self.session_data[key] = value
+        
+    def get_user_info(self) -> Optional[Dict[str, Any]]:
+        """사용자 정보 가져오기"""
+        if self.is_authenticated:
+            return {
+                'user_id': self.user_id,
+                'user_name': self.user_name,
+                **self.session_data
+            }
+        return None
