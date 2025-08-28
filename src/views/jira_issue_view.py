@@ -33,7 +33,7 @@ class JiraIssueView:
         # 메인 컨테이너 (카드 스타일)
         container = tk.Frame(self.frame, 
                            bg=self.theme.BG_CARD,
-                           width=600,
+                           width=800,
                            height=500,
                            highlightthickness=1,
                            highlightbackground=self.theme.BORDER_COLOR)
@@ -42,7 +42,7 @@ class JiraIssueView:
         
         # 내부 패딩
         inner_container = tk.Frame(container, bg=self.theme.BG_CARD)
-        inner_container.pack(padx=40, pady=40, fill='both', expand=True)
+        inner_container.pack(padx=30, pady=30, fill='both', expand=True)
         
         # 타이틀
         title = tk.Label(inner_container, text="Jira Issue 선택",

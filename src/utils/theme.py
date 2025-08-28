@@ -1,49 +1,58 @@
 """다크 테마 스타일 정의"""
 
 class DarkTheme:
-    """다크 테마 색상 및 스타일"""
+    """다크 테마 색상 및 스타일 - 블랙 계열"""
     
-    # 메인 색상
-    BG_PRIMARY: str = "#1a1a2e"      # 메인 배경 (진한 네이비)
-    BG_SECONDARY: str = "#16213e"    # 보조 배경
-    BG_TERTIARY: str = "#0f3460"     # 세번째 배경
+    # 메인 색상 - 블랙 계열
+    BG_PRIMARY: str = "#000000"      # 메인 배경 (순수 블랙)
+    BG_SECONDARY: str = "#0a0a0a"    # 보조 배경 (거의 블랙)
+    BG_TERTIARY: str = "#0f0f0f"     # 세번째 배경
     
     # 카드 및 컨테이너
-    BG_CARD: str = "#1e2139"         # 카드 배경
-    BG_HOVER: str = "#252844"        # 호버 상태
-    BG_INPUT: str = "#2a2d4a"        # 입력 필드 배경
+    BG_CARD: str = "#141414"         # 카드 배경 (다크 그레이)
+    BG_HOVER: str = "#1f1f1f"        # 호버 상태
+    BG_INPUT: str = "#1a1a1a"        # 입력 필드 배경
     
-    # 액센트 색상
-    ACCENT_PRIMARY: str = "#7c3aed"   # 메인 액센트 (보라색)
-    ACCENT_HOVER: str = "#6d28d9"     # 호버 액센트
-    ACCENT_ACTIVE: str = "#5b21b6"    # 활성 액센트
+    # 액센트 색상 - 미니멀한 화이트/그레이
+    ACCENT_PRIMARY: str = "#ffffff"   # 메인 액센트 (화이트)
+    ACCENT_HOVER: str = "#e0e0e0"     # 호버 액센트
+    ACCENT_ACTIVE: str = "#cccccc"    # 활성 액센트
     
-    # 성공, 경고, 에러
-    SUCCESS: str = "#10b981"          # 성공 (민트 그린)
-    WARNING: str = "#f59e0b"          # 경고 (오렌지)
-    ERROR: str = "#ef4444"            # 에러 (레드)
-    INFO: str = "#3b82f6"            # 정보 (블루)
+    # 성공, 경고, 에러 - 채도를 낮춘 색상
+    SUCCESS: str = "#4a5d4a"          # 성공 (다크 그린)
+    WARNING: str = "#5d4a3a"          # 경고 (다크 오렌지)
+    ERROR: str = "#5d3a3a"            # 에러 (다크 레드)
+    INFO: str = "#3a4a5d"            # 정보 (다크 블루)
     
     # 텍스트 색상
-    TEXT_PRIMARY: str = "#f8fafc"     # 주 텍스트 (밝은 흰색)
-    TEXT_SECONDARY: str = "#cbd5e1"   # 보조 텍스트 (회색빛 흰색)
-    TEXT_MUTED: str = "#94a3b8"       # 약한 텍스트
-    TEXT_DISABLED: str = "#64748b"    # 비활성 텍스트
+    TEXT_PRIMARY: str = "#ffffff"     # 주 텍스트 (순백색)
+    TEXT_SECONDARY: str = "#b3b3b3"   # 보조 텍스트 (밝은 회색)
+    TEXT_MUTED: str = "#666666"       # 약한 텍스트 (중간 회색)
+    TEXT_DISABLED: str = "#404040"    # 비활성 텍스트 (다크 그레이)
     
     # 보더 색상
-    BORDER_COLOR: str = "#334155"     # 일반 보더
-    BORDER_FOCUS: str = "#7c3aed"     # 포커스 보더
+    BORDER_COLOR: str = "#2a2a2a"     # 일반 보더 (다크 그레이)
+    BORDER_FOCUS: str = "#4a4a4a"     # 포커스 보더 (미디움 그레이)
     
     # 그림자 효과
     SHADOW_SM: str = "0 1px 2px 0 rgba(0, 0, 0, 0.5)"
     SHADOW_MD: str = "0 4px 6px -1px rgba(0, 0, 0, 0.5)"
     SHADOW_LG: str = "0 10px 15px -3px rgba(0, 0, 0, 0.5)"
     
-    # 폰트
-    FONT_FAMILY: str = "Segoe UI"
+    # 폰트 - 플랫폼별 세련된 폰트
+    import platform
+    system = platform.system()
+    if system == "Darwin":  # macOS
+        FONT_FAMILY: str = "SF Pro Display"
+    elif system == "Windows":
+        FONT_FAMILY: str = "Segoe UI"
+    else:  # Linux
+        FONT_FAMILY: str = "Ubuntu"
+    
     FONT_SIZE_XS: int = 9
     FONT_SIZE_SM: int = 11
     FONT_SIZE_MD: int = 13
+    FONT_SIZE_BASE: int = 12
     FONT_SIZE_LG: int = 16
     FONT_SIZE_XL: int = 20
     FONT_SIZE_2XL: int = 24

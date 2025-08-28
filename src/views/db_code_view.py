@@ -30,9 +30,12 @@ class DBCodeView:
         # 메인 컨테이너 (카드 스타일)
         container = tk.Frame(self.frame, 
                            bg=self.theme.BG_CARD,
+                           width=600,
+                           height=500,
                            highlightthickness=1,
                            highlightbackground=self.theme.BORDER_COLOR)
         container.place(relx=0.5, rely=0.45, anchor='center')
+        container.pack_propagate(False)
         
         # 내부 패딩
         inner_container = tk.Frame(container, bg=self.theme.BG_CARD)

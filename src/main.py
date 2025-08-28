@@ -55,14 +55,15 @@ class TMSetterApp:
         
     def _setup_window(self):
         """윈도우 초기 설정"""
-        # 크기 설정
-        width = self.config.get('window.width', 800)
-        height = self.config.get('window.height', 600)
-        min_width = self.config.get('window.min_width', 700)
-        min_height = self.config.get('window.min_height', 500)
+        # 고정 크기 설정
+        width = 900
+        height = 700
         
+        # 윈도우 크기 고정
         self.root.geometry(f"{width}x{height}")
-        self.root.minsize(min_width, min_height)
+        self.root.minsize(width, height)
+        self.root.maxsize(width, height)  # 최대 크기도 고정하여 리사이즈 방지
+        self.root.resizable(False, False)  # 크기 조절 비활성화
         
         # 배경색 설정
         self.root.configure(bg=self.theme.BG_PRIMARY)
