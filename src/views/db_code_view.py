@@ -166,10 +166,30 @@ class DBCodeView:
         
     def load_options(self):
         """옵션 로드"""
-        # 설정에서 옵션 가져오기
-        item1_options = self.app.config.get('db_codes.item1_options', [])
-        item2_options = self.app.config.get('db_codes.item2_options', [])
-        item3_options = self.app.config.get('db_codes.item3_options', [])
+        # 데이터베이스에서 DB Code 가져오기
+        from controllers.db_controller import DBController
+        db_controller = DBController()
+        
+        try:
+            db_codes = db_controller.get_db_codes()
+            
+            # 카테고리별로 옵션 설정
+            categories = list(db_codes.keys())
+            if len(categories) >= 3:
+                item1_options = [code['display'] for code in db_codes[categories[0]]]
+                item2_options = [code['display'] for code in db_codes[categories[1]]]
+                item3_options = [code['display'] for code in db_codes[categories[2]]]
+            else:
+                # 카테고리가 부족한 경우 샘플 데이터 사용
+                item1_options = self.app.config.get('db_codes.item1_options', [])
+                item2_options = self.app.config.get('db_codes.item2_options', [])
+                item3_options = self.app.config.get('db_codes.item3_options', [])
+        except Exception as e:
+            print(f"DB Code 로드 실패: {e}")
+            # 에러 발생 시 기존 설정 사용
+            item1_options = self.app.config.get('db_codes.item1_options', [])
+            item2_options = self.app.config.get('db_codes.item2_options', [])
+            item3_options = self.app.config.get('db_codes.item3_options', [])
         
         # 콤보박스에 설정
         self.item1_combo['values'] = item1_options

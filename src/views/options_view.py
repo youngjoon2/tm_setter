@@ -163,8 +163,18 @@ class OptionsView:
         
     def load_options(self):
         """옵션 로드"""
-        # SW 버전 목록 로드
-        versions = self.app.config.get('sw_versions', [])
+        # 데이터베이스에서 설정 로드
+        from controllers.db_controller import DBController
+        db_controller = DBController()
+        
+        try:
+            settings = db_controller.get_settings()
+            versions = settings.get('sw_versions', [])
+        except Exception as e:
+            print(f"설정 로드 실패: {e}")
+            # 에러 발생 시 기본값 사용
+            versions = self.app.config.get('sw_versions', [])
+        
         self.version_combo['values'] = versions
         
         # 기본값 설정
@@ -221,6 +231,22 @@ class OptionsView:
             'options': self.app.session.get('options', {}) if not skip else {},
             'skipped_options': skip
         }
+        
+        # 데이터베이스에 세션 저장
+        from controllers.db_controller import DBController
+        db_controller = DBController()
+        
+        try:
+            saved = db_controller.save_session(
+                user_id=result['user_id'],
+                db_codes=result['db_codes'],
+                selected_issue=result['selected_issue'].get('key', '') if isinstance(result['selected_issue'], dict) else '',
+                options=result['options']
+            )
+            result['saved_to_db'] = saved
+        except Exception as e:
+            print(f"세션 저장 실패: {e}")
+            result['saved_to_db'] = False
         
         return result
         
