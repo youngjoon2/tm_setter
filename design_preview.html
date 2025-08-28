@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TM Setter - 다크 테마 디자인 프리뷰</title>
+    <style>
+        :root {
+            /* 다크 테마 색상 팔레트 */
+            --bg-primary: #1a1a2e;
+            --bg-secondary: #16213e;
+            --bg-tertiary: #0f3460;
+            --bg-card: #1e2139;
+            --bg-hover: #252844;
+            --bg-input: #2a2d4a;
+            
+            --accent-primary: #7c3aed;
+            --accent-hover: #6d28d9;
+            --accent-active: #5b21b6;
+            
+            --success: #10b981;
+            --warning: #f59e0b;
+            --error: #ef4444;
+            --info: #3b82f6;
+            
+            --text-primary: #f8fafc;
+            --text-secondary: #cbd5e1;
+            --text-muted: #94a3b8;
+            --text-disabled: #64748b;
+            
+            --border-color: #334155;
+            --border-focus: #7c3aed;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        /* 헤더 */
+        .header {
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-active));
+            height: 70px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        }
+        
+        .header h1 {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--text-primary);
+        }
+        
+        /* 스텝 인디케이터 */
+        .step-indicator {
+            background: var(--bg-secondary);
+            height: 70px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 40px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .step {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            position: relative;
+        }
+        
+        .step::before {
+            content: '';
+            position: absolute;
+            left: -30px;
+            width: 30px;
+            height: 2px;
+            background: var(--border-color);
+        }
+        
+        .step:first-child::before {
+            display: none;
+        }
+        
+        .step-circle {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--bg-card);
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        
+        .step.active .step-circle {
+            background: var(--accent-primary);
+            color: var(--text-primary);
+            box-shadow: 0 0 10px var(--accent-primary);
+        }
+        
+        .step.completed .step-circle {
+            background: var(--success);
+            color: var(--text-primary);
+        }
+        
+        .step-label {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+        
+        .step.active .step-label,
+        .step.completed .step-label {
+            color: var(--text-secondary);
+        }
+        
+        /* 메인 컨테이너 */
+        .main-container {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+        }
+        
+        /* 카드 */
+        .card {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 40px;
+            width: 100%;
+            max-width: 500px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+            border: 1px solid var(--border-color);
+        }
+        
+        /* 로그인 폼 예시 */
+        .login-icon {
+            width: 60px;
+            height: 60px;
+            background: var(--accent-primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            font-size: 30px;
+        }
+        
+        .card h2 {
+            text-align: center;
+            margin-bottom: 10px;
+            color: var(--text-primary);
+        }
+        
+        .card .subtitle {
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 14px;
+            margin-bottom: 30px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 12px 15px;
+            background: var(--bg-input);
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: var(--border-focus);
+            box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.2);
+        }
+        
+        .button {
+            width: 100%;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .button-primary {
+            background: var(--accent-primary);
+            color: var(--text-primary);
+        }
+        
+        .button-primary:hover {
+            background: var(--accent-hover);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
+        }
+        
+        .button-secondary {
+            background: var(--bg-card);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+        }
+        
+        .button-secondary:hover {
+            background: var(--bg-hover);
+        }
+        
+        .hint {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border-color);
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+        
+        .hint-icon {
+            color: var(--info);
+        }
+        
+        /* 버튼 그룹 */
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 30px;
+        }
+        
+        .button-group .button {
+            width: auto;
+            flex: 1;
+        }
+        
+        /* 섹션 구분 */
+        .preview-section {
+            margin-bottom: 40px;
+            padding: 20px;
+            background: var(--bg-secondary);
+            border-radius: 8px;
+        }
+        
+        .preview-title {
+            font-size: 18px;
+            margin-bottom: 20px;
+            color: var(--text-primary);
+        }
+        
+        /* 색상 팔레트 표시 */
+        .color-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .color-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .color-box {
+            width: 100%;
+            height: 60px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+        
+        .color-label {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+        
+        .color-value {
+            font-size: 11px;
+            color: var(--text-muted);
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <!-- 헤더 -->
+    <div class="header">
+        <h1>TM Setter</h1>
+    </div>
+    
+    <!-- 스텝 인디케이터 -->
+    <div class="step-indicator">
+        <div class="step completed">
+            <div class="step-circle">1</div>
+            <div class="step-label">로그인</div>
+        </div>
+        <div class="step active">
+            <div class="step-circle">2</div>
+            <div class="step-label">DB Code</div>
+        </div>
+        <div class="step">
+            <div class="step-circle">3</div>
+            <div class="step-label">Jira Issue</div>
+        </div>
+        <div class="step">
+            <div class="step-circle">4</div>
+            <div class="step-label">옵션</div>
+        </div>
+    </div>
+    
+    <!-- 메인 컨테이너 -->
+    <div class="main-container">
+        <div class="card">
+            <!-- 로그인 아이콘 -->
+            <div class="login-icon">👤</div>
+            
+            <h2>로그인</h2>
+            <p class="subtitle">TM Setter에 접속하세요</p>
+            
+            <!-- 폼 -->
+            <div class="form-group">
+                <label class="form-label">사용자 ID</label>
+                <input type="text" class="form-input" placeholder="ID를 입력하세요">
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">비밀번호</label>
+                <input type="password" class="form-input" placeholder="비밀번호를 입력하세요">
+            </div>
+            
+            <button class="button button-primary">로그인</button>
+            
+            <div class="hint">
+                <span class="hint-icon">ℹ️</span>
+                <span>테스트: ID='admin', PW='admin'</span>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 색상 팔레트 섹션 -->
+    <div class="main-container">
+        <div style="width: 100%; max-width: 1200px;">
+            <div class="preview-section">
+                <h3 class="preview-title">다크 테마 색상 팔레트</h3>
+                
+                <div class="color-grid">
+                    <div class="color-item">
+                        <div class="color-box" style="background: var(--bg-primary);"></div>
+                        <div class="color-label">Primary BG</div>
+                        <div class="color-value">#1a1a2e</div>
+                    </div>
+                    
+                    <div class="color-item">
+                        <div class="color-box" style="background: var(--bg-secondary);"></div>
+                        <div class="color-label">Secondary BG</div>
+                        <div class="color-value">#16213e</div>
+                    </div>
+                    
+                    <div class="color-item">
+                        <div class="color-box" style="background: var(--bg-card);"></div>
+                        <div class="color-label">Card BG</div>
+                        <div class="color-value">#1e2139</div>
+                    </div>
+                    
+                    <div class="color-item">
+                        <div class="color-box" style="background: var(--accent-primary);"></div>
+                        <div class="color-label">Accent</div>
+                        <div class="color-value">#7c3aed</div>
+                    </div>
+                    
+                    <div class="color-item">
+                        <div class="color-box" style="background: var(--success);"></div>
+                        <div class="color-label">Success</div>
+                        <div class="color-value">#10b981</div>
+                    </div>
+                    
+                    <div class="color-item">
+                        <div class="color-box" style="background: var(--error);"></div>
+                        <div class="color-label">Error</div>
+                        <div class="color-value">#ef4444</div>
+                    </div>
+                    
+                    <div class="color-item">
+                        <div class="color-box" style="background: var(--warning);"></div>
+                        <div class="color-label">Warning</div>
+                        <div class="color-value">#f59e0b</div>
+                    </div>
+                    
+                    <div class="color-item">
+                        <div class="color-box" style="background: var(--info);"></div>
+                        <div class="color-label">Info</div>
+                        <div class="color-value">#3b82f6</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="preview-section">
+                <h3 class="preview-title">버튼 스타일</h3>
+                <div class="button-group">
+                    <button class="button button-primary">Primary Button</button>
+                    <button class="button button-secondary">Secondary Button</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

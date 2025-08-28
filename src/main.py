@@ -8,6 +8,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from utils.config import Config, SessionManager
 from utils.async_handler import AsyncHandler
+from utils.theme import DarkTheme
 from views.login_view import LoginView
 from views.db_code_view import DBCodeView
 from views.jira_issue_view import JiraIssueView
@@ -20,6 +21,9 @@ class TMSetterApp:
     def __init__(self):
         self.root = tk.Tk()
         self.root.title("TM Setter")
+        
+        # 테마 설정
+        self.theme = DarkTheme
         
         # 설정 및 세션 관리자
         self.config = Config()
@@ -40,8 +44,8 @@ class TMSetterApp:
         self._create_header()
         
         # 메인 컨테이너
-        self.main_container = tk.Frame(self.root, bg='white')
-        self.main_container.pack(fill='both', expand=True)
+        self.main_container = tk.Frame(self.root, **self.theme.get_frame_style('primary'))
+        self.main_container.pack(fill='both', expand=True, padx=0, pady=0)
         
         # 뷰 초기화
         self._init_views()
@@ -52,13 +56,16 @@ class TMSetterApp:
     def _setup_window(self):
         """윈도우 초기 설정"""
         # 크기 설정
-        width = self.config.get('window.width', 600)
-        height = self.config.get('window.height', 500)
-        min_width = self.config.get('window.min_width', 500)
-        min_height = self.config.get('window.min_height', 400)
+        width = self.config.get('window.width', 800)
+        height = self.config.get('window.height', 600)
+        min_width = self.config.get('window.min_width', 700)
+        min_height = self.config.get('window.min_height', 500)
         
         self.root.geometry(f"{width}x{height}")
         self.root.minsize(min_width, min_height)
+        
+        # 배경색 설정
+        self.root.configure(bg=self.theme.BG_PRIMARY)
         
         # 화면 중앙 배치
         self.root.update_idletasks()
@@ -72,40 +79,38 @@ class TMSetterApp:
     def _setup_styles(self):
         """스타일 설정"""
         style = ttk.Style()
+        style.theme_use('clam')  # 더 현대적인 테마 사용
         
-        # 색상 설정
-        primary = self.config.get('theme.primary_color', '#667eea')
-        secondary = self.config.get('theme.secondary_color', '#764ba2')
-        
-        # 버튼 스타일
-        style.configure('Primary.TButton',
-                       font=('Arial', 10, 'bold'))
-        
-        style.configure('Secondary.TButton',
-                       font=('Arial', 10))
+        # 다크 테마 스타일 적용
+        ttk_styles = self.theme.get_ttk_style_config()
+        for widget_class, config in ttk_styles.items():
+            if 'configure' in config:
+                style.configure(widget_class, **config['configure'])
+            if 'map' in config:
+                style.map(widget_class, **config['map'])
         
     def _create_header(self):
         """헤더 및 스텝 인디케이터 생성"""
         # 헤더 프레임
-        header_frame = tk.Frame(self.root, height=60)
+        header_frame = tk.Frame(self.root, height=70, bg=self.theme.BG_SECONDARY)
         header_frame.pack(fill='x')
         header_frame.pack_propagate(False)
         
         # 그라데이션 효과를 위한 캔버스
-        self.header_canvas = tk.Canvas(header_frame, highlightthickness=0)
+        self.header_canvas = tk.Canvas(header_frame, highlightthickness=0, bd=0)
         self.header_canvas.pack(fill='both', expand=True)
         
-        # 그라데이션 그리기
-        self._draw_gradient(self.header_canvas, '#667eea', '#764ba2')
+        # 그라데이션 그리기 (다크 테마 색상)
+        self._draw_gradient(self.header_canvas, self.theme.ACCENT_PRIMARY, self.theme.ACCENT_ACTIVE)
         
         # 타이틀
         title = tk.Label(self.header_canvas, text="TM Setter",
-                        font=('Arial', 20, 'bold'),
-                        fg='white', bg='#6d7dd6')
-        self.header_canvas.create_window(300, 30, window=title)
+                        font=(self.theme.FONT_FAMILY, self.theme.FONT_SIZE_2XL, 'bold'),
+                        fg=self.theme.TEXT_PRIMARY, bg=self.theme.ACCENT_PRIMARY)
+        self.header_canvas.create_window(400, 35, window=title)
         
         # 스텝 인디케이터 프레임
-        step_frame = tk.Frame(self.root, bg='#f8f9fa', height=60)
+        step_frame = tk.Frame(self.root, bg=self.theme.BG_SECONDARY, height=70)
         step_frame.pack(fill='x')
         step_frame.pack_propagate(False)
         
@@ -118,25 +123,30 @@ class TMSetterApp:
             ('step4', '4', '옵션')
         ]
         
-        step_container = tk.Frame(step_frame, bg='#f8f9fa')
+        step_container = tk.Frame(step_frame, bg=self.theme.BG_SECONDARY)
         step_container.place(relx=0.5, rely=0.5, anchor='center')
         
         for i, (step_id, num, text) in enumerate(steps):
             # 스텝 컨테이너
-            step_widget = tk.Frame(step_container, bg='#f8f9fa')
-            step_widget.pack(side='left', padx=15)
+            step_widget = tk.Frame(step_container, bg=self.theme.BG_SECONDARY)
+            step_widget.pack(side='left', padx=20)
+            
+            # 연결선 (첫 번째 스텝 제외)
+            if i > 0:
+                line = tk.Frame(step_widget, bg=self.theme.BORDER_COLOR, height=2, width=40)
+                line.place(x=-30, rely=0.5, anchor='w')
             
             # 스텝 서클
             circle = tk.Label(step_widget, text=num, 
-                            font=('Arial', 12, 'bold'),
-                            fg='#6c757d', bg='#dee2e6',
+                            font=(self.theme.FONT_FAMILY, self.theme.FONT_SIZE_MD, 'bold'),
+                            fg=self.theme.TEXT_MUTED, bg=self.theme.BG_CARD,
                             width=3, height=1)
             circle.pack(side='left', padx=5)
             
             # 스텝 텍스트
             label = tk.Label(step_widget, text=text,
-                           font=('Arial', 10),
-                           fg='#6c757d', bg='#f8f9fa')
+                           font=(self.theme.FONT_FAMILY, self.theme.FONT_SIZE_SM),
+                           fg=self.theme.TEXT_MUTED, bg=self.theme.BG_SECONDARY)
             label.pack(side='left')
             
             self.step_indicators[step_id] = {
@@ -195,8 +205,8 @@ class TMSetterApp:
         """스텝 인디케이터 업데이트"""
         # 모든 스텝 초기화
         for step in self.step_indicators.values():
-            step['circle'].config(fg='#6c757d', bg='#dee2e6')
-            step['label'].config(fg='#6c757d')
+            step['circle'].config(fg=self.theme.TEXT_MUTED, bg=self.theme.BG_CARD)
+            step['label'].config(fg=self.theme.TEXT_MUTED)
             
         # 현재 스텝과 완료된 스텝 표시
         step_map = {
@@ -213,12 +223,12 @@ class TMSetterApp:
                     indicator = self.step_indicators[step_id]
                     if i < len(steps) - 1:
                         # 완료된 스텝
-                        indicator['circle'].config(fg='white', bg='#28a745')
-                        indicator['label'].config(fg='#28a745')
+                        indicator['circle'].config(fg=self.theme.TEXT_PRIMARY, bg=self.theme.SUCCESS)
+                        indicator['label'].config(fg=self.theme.SUCCESS)
                     else:
                         # 현재 스텝
-                        indicator['circle'].config(fg='white', bg='#667eea')
-                        indicator['label'].config(fg='#667eea')
+                        indicator['circle'].config(fg=self.theme.TEXT_PRIMARY, bg=self.theme.ACCENT_PRIMARY)
+                        indicator['label'].config(fg=self.theme.ACCENT_PRIMARY)
                         
     def on_closing(self):
         """애플리케이션 종료"""

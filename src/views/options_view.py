@@ -3,6 +3,10 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
 import time
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from utils.theme import DarkTheme
 
 
 class OptionsView:
@@ -11,7 +15,8 @@ class OptionsView:
     def __init__(self, parent, app):
         self.parent = parent
         self.app = app
-        self.frame = tk.Frame(parent, bg='white')
+        self.theme = DarkTheme
+        self.frame = tk.Frame(parent, **self.theme.get_frame_style('primary'))
         
         # 옵션 값들
         self.repo_name_var = tk.StringVar()
@@ -21,9 +26,16 @@ class OptionsView:
         
     def _create_widgets(self):
         """위젯 생성"""
-        # 메인 컨테이너
-        container = tk.Frame(self.frame, bg='white')
-        container.place(relx=0.5, rely=0.5, anchor='center')
+        # 메인 컨테이너 (카드 스타일)
+        container = tk.Frame(self.frame, 
+                           bg=self.theme.BG_CARD,
+                           highlightthickness=1,
+                           highlightbackground=self.theme.BORDER_COLOR)
+        container.place(relx=0.5, rely=0.45, anchor='center')
+        
+        # 내부 패딩
+        inner_container = tk.Frame(container, bg=self.theme.BG_CARD)
+        inner_container.pack(padx=40, pady=40)
         
         # 타이틀
         title = tk.Label(container, text="옵션 설정",

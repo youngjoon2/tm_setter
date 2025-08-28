@@ -3,6 +3,10 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
 import time
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from utils.theme import DarkTheme
 
 
 class JiraIssueView:
@@ -11,7 +15,8 @@ class JiraIssueView:
     def __init__(self, parent, app):
         self.parent = parent
         self.app = app
-        self.frame = tk.Frame(parent, bg='white')
+        self.theme = DarkTheme
+        self.frame = tk.Frame(parent, **self.theme.get_frame_style('primary'))
         
         # 선택된 이슈
         self.selected_issue = None
@@ -25,10 +30,19 @@ class JiraIssueView:
         
     def _create_widgets(self):
         """위젯 생성"""
-        # 메인 컨테이너
-        container = tk.Frame(self.frame, bg='white', width=500)
-        container.place(relx=0.5, rely=0.5, anchor='center')
+        # 메인 컨테이너 (카드 스타일)
+        container = tk.Frame(self.frame, 
+                           bg=self.theme.BG_CARD,
+                           width=600,
+                           height=500,
+                           highlightthickness=1,
+                           highlightbackground=self.theme.BORDER_COLOR)
+        container.place(relx=0.5, rely=0.45, anchor='center')
         container.pack_propagate(False)
+        
+        # 내부 패딩
+        inner_container = tk.Frame(container, bg=self.theme.BG_CARD)
+        inner_container.pack(padx=40, pady=40, fill='both', expand=True)
         
         # 타이틀
         title = tk.Label(container, text="Jira Issue 선택",
@@ -119,27 +133,46 @@ class JiraIssueView:
         
     def fetch_issues(self):
         """이슈 가져오기 (백그라운드)"""
-        # API 호출 시뮬레이션
-        time.sleep(1)
+        from controllers.jira_controller import JiraController
         
-        # DB Code 기반 필터링 (실제로는 API에서 처리)
+        # Jira 컨트롤러 초기화
+        jira_credentials = getattr(self.app, 'jira_credentials', None)
+        if jira_credentials:
+            jira = JiraController(
+                server_url=jira_credentials.get('url'),
+                user_id=jira_credentials.get('user_id'),
+                password=jira_credentials.get('password'),
+                use_real_api=True
+            )
+        else:
+            jira = JiraController()
+        
+        # DB Code에서 선택한 정보 또는 세션에서 가져오기
         db_codes = self.app.session.get('db_codes', {})
+        project = db_codes.get('item1', '')
         
-        # 더미 데이터 생성
-        issues = [
-            {'key': 'PROJ-1234', 'summary': '사용자 인증 기능 개선'},
-            {'key': 'PROJ-1235', 'summary': '데이터베이스 연결 최적화'},
-            {'key': 'PROJ-1236', 'summary': 'UI 응답성 개선'},
-            {'key': 'PROJ-1237', 'summary': '로깅 시스템 구현'},
-            {'key': 'PROJ-1238', 'summary': 'API 에러 핸들링 개선'},
-            {'key': 'PROJ-1239', 'summary': '보안 취약점 수정'},
-            {'key': 'PROJ-1240', 'summary': '성능 모니터링 추가'},
-            {'key': 'PROJ-1241', 'summary': '배포 자동화 스크립트'},
-            {'key': 'PROJ-1242', 'summary': '테스트 커버리지 향상'},
-            {'key': 'PROJ-1243', 'summary': '문서화 작업'},
-        ]
+        # 이슈 검색
+        issues = jira.search_issues(query="", project=project if project else None, max_results=50)
         
-        return issues
+        # 기본 포맷 맞추기
+        formatted_issues = []
+        for issue in issues:
+            formatted_issues.append({
+                'key': issue.get('key', ''),
+                'summary': issue.get('summary', ''),
+                'status': issue.get('status', ''),
+                'assignee': issue.get('assignee', ''),
+                'priority': issue.get('priority', '')
+            })
+        
+        if not formatted_issues:
+            # 이슈가 없는 경우 기본 샘플 데이터
+            formatted_issues = [
+                {'key': 'SAMPLE-001', 'summary': '샘플 이슈 1', 'status': 'Open'},
+                {'key': 'SAMPLE-002', 'summary': '샘플 이슈 2', 'status': 'In Progress'}
+            ]
+        
+        return formatted_issues
         
     def on_issues_loaded(self, issues):
         """이슈 로드 완료"""

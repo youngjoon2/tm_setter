@@ -56,10 +56,14 @@
 ## 📋 진행 예정 작업
 
 ### 6단계: 실제 API 연동
-- [ ] Jira API 연동
-  - [ ] OAuth 인증 구현
-  - [ ] 실제 Issue 조회
-  - [ ] Issue 생성/수정
+- [x] Jira API 연동
+  - [x] 기본 인증 구현 (API Token 방식)
+  - [x] 실제 Issue 조회
+  - [x] Issue 생성/수정
+  - [x] Atlassian API 모듈 통합
+  - [x] 로그인 화면에 Jira URL 입력 필드 추가
+  - [x] JiraController와 실제 API 연결
+  - [x] 통합 테스트 작성 및 검증
 - [ ] 데이터베이스 연동
   - [ ] DB 연결 설정
   - [ ] 실제 DB Code 조회
