@@ -150,10 +150,16 @@ class DBCodeView:
         
         # 버튼 호버 효과
         self.prev_button.bind('<Enter>', lambda e: self.prev_button.config(bg=self.theme.BG_HOVER))
-        self.prev_button.bind('<Leave>', lambda e: self.prev_button.config(bg=self.theme.BG_CARD))
+        self.prev_button.bind('<Leave>', lambda e: self.prev_button.config(bg=self.theme.BG_SECONDARY))
         self.next_button.bind('<Enter>', lambda e: self.next_button.config(
             bg=self.theme.ACCENT_HOVER if self.next_button['state'] == 'normal' else self.theme.ACCENT_PRIMARY))
         self.next_button.bind('<Leave>', lambda e: self.next_button.config(bg=self.theme.ACCENT_PRIMARY))
+        
+        # 진행 상태 표시
+        status_label = tk.Label(button_frame, text="(2/4 단계)",
+                               font=(self.theme.FONT_FAMILY, self.theme.FONT_SIZE_XS),
+                               fg=self.theme.TEXT_MUTED, bg=self.theme.BG_CARD)
+        status_label.pack(side='left', padx=20)
         
     def load_options(self):
         """옵션 로드"""
