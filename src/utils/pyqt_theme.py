@@ -18,9 +18,9 @@ class PyQtDarkTheme:
     BORDER_COLOR = "#404040"
     BORDER_FOCUS = "#5294e2"
     
-    ACCENT_PRIMARY = "#4a9eff"
-    ACCENT_HOVER = "#66b0ff"
-    ACCENT_ACTIVE = "#3388ee"
+    ACCENT_PRIMARY = "#2d3436"  # 다크 그레이
+    ACCENT_HOVER = "#636e72"    # 미디움 그레이
+    ACCENT_ACTIVE = "#495057"   # 액티브 그레이
     
     SUCCESS = "#52c41a"
     WARNING = "#faad14"
@@ -34,7 +34,7 @@ class PyQtDarkTheme:
     FONT_SIZE_MD = 12
     FONT_SIZE_LG = 14
     FONT_SIZE_XL = 16
-    FONT_SIZE_2XL = 20
+    FONT_SIZE_2XL = 18  # 타이틀 크기 줄임
     
     @classmethod
     def get_stylesheet(cls) -> str:
@@ -67,9 +67,23 @@ class PyQtDarkTheme:
         }}
         
         QFrame#stepFrame {{
-            background-color: {cls.BG_SECONDARY};
+            background-color: #1e1e1e;
             border: none;
+            border-bottom: 1px solid #2d3436;
             border-radius: 0;
+        }}
+        
+        /* 로그인 카드 */
+        QFrame#loginCard {{
+            background-color: {cls.BG_CARD};
+            border: 1px solid {cls.BORDER_COLOR};
+            border-radius: 8px;
+        }}
+        
+        QFrame#dbCodeCard {{
+            background-color: {cls.BG_CARD};
+            border: 1px solid {cls.BORDER_COLOR};
+            border-radius: 8px;
         }}
         
         /* 라벨 */
@@ -131,7 +145,7 @@ class PyQtDarkTheme:
         
         /* 버튼 */
         QPushButton {{
-            background-color: {cls.ACCENT_PRIMARY};
+            background-color: #34495e;
             color: white;
             border: none;
             border-radius: 4px;
@@ -142,11 +156,11 @@ class PyQtDarkTheme:
         }}
         
         QPushButton:hover {{
-            background-color: {cls.ACCENT_HOVER};
+            background-color: #495a6f;
         }}
         
         QPushButton:pressed {{
-            background-color: {cls.ACCENT_ACTIVE};
+            background-color: #2c3e50;
         }}
         
         QPushButton:disabled {{
@@ -327,28 +341,28 @@ class PyQtDarkTheme:
         
         /* 스텝 인디케이터 */
         QLabel#stepCircle {{
-            background-color: {cls.BG_CARD};
-            color: {cls.TEXT_MUTED};
-            border: 2px solid {cls.BORDER_COLOR};
-            border-radius: 20px;
-            min-width: 40px;
-            max-width: 40px;
-            min-height: 40px;
-            max-height: 40px;
+            background-color: #2d3436;
+            color: #7f8c8d;
+            border: 2px solid #34495e;
+            border-radius: 16px;
+            min-width: 32px;
+            max-width: 32px;
+            min-height: 32px;
+            max-height: 32px;
             font-weight: bold;
-            font-size: {cls.FONT_SIZE_MD}px;
+            font-size: {cls.FONT_SIZE_SM}px;
         }}
         
         QLabel#stepCircleActive {{
-            background-color: {cls.ACCENT_PRIMARY};
+            background-color: #34495e;
             color: white;
-            border-color: {cls.ACCENT_PRIMARY};
+            border-color: #34495e;
         }}
         
         QLabel#stepCircleCompleted {{
-            background-color: {cls.SUCCESS};
+            background-color: #27ae60;
             color: white;
-            border-color: {cls.SUCCESS};
+            border-color: #27ae60;
         }}
         
         QLabel#stepText {{
@@ -357,12 +371,12 @@ class PyQtDarkTheme:
         }}
         
         QLabel#stepTextActive {{
-            color: {cls.ACCENT_PRIMARY};
+            color: #ecf0f1;
             font-weight: bold;
         }}
         
         QLabel#stepTextCompleted {{
-            color: {cls.SUCCESS};
+            color: #95a5a6;
         }}
         
         /* 구분선 */

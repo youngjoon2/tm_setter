@@ -4,15 +4,18 @@ import sys
 import os
 from PyQt5.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
-    QLabel, QFrame, QPushButton, QStackedWidget, QMessageBox
+    QLabel, QFrame, QPushButton, QStackedWidget, QMessageBox, QStatusBar,
+    QShortcut, QSizePolicy
 )
-from PyQt5.QtCore import Qt, pyqtSignal, QThread, QObject
-from PyQt5.QtGui import QFont, QPalette, QLinearGradient, QPainter, QBrush
+from PyQt5.QtCore import Qt, pyqtSignal, QThread, QObject, QTimer
+from PyQt5.QtGui import QFont, QPalette, QLinearGradient, QPainter, QBrush, QKeySequence, QColor
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from utils.config import Config, SessionManager
 from utils.pyqt_theme import PyQtDarkTheme
+from utils.animations import AnimationHelper
+from widgets.loading_indicator import LoadingIndicator
 from pyqt_views.login_view import LoginView
 from pyqt_views.db_code_view import DBCodeView
 from pyqt_views.jira_issue_view import JiraIssueView
@@ -61,28 +64,43 @@ class StepIndicator(QWidget):
         self.label.setStyle(self.label.style())
 
 
-class GradientHeader(QFrame):
-    """그라데이션 헤더 위젯"""
+class MinimalHeader(QFrame):
+    """미니멀한 헤더 위젯"""
     
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setFixedHeight(70)
+        self.setMinimumHeight(45)  # 최소 높이
+        self.setMaximumHeight(50)  # 최대 높이
         self.setObjectName("header")
+        self.setup_ui()
         
-    def paintEvent(self, event):
-        """그라데이션 페인팅"""
-        painter = QPainter(self)
-        gradient = QLinearGradient(0, 0, 0, self.height())
-        gradient.setColorStop(0, PyQtDarkTheme.ACCENT_PRIMARY)
-        gradient.setColorStop(1, PyQtDarkTheme.ACCENT_ACTIVE)
-        painter.fillRect(self.rect(), QBrush(gradient))
+    def setup_ui(self):
+        """UI 설정"""
+        layout = QHBoxLayout(self)
+        layout.setContentsMargins(20, 0, 20, 0)
         
-        # 타이틀 그리기
-        painter.setPen(Qt.white)
-        font = QFont(PyQtDarkTheme.FONT_FAMILY, PyQtDarkTheme.FONT_SIZE_2XL)
-        font.setBold(True)
-        painter.setFont(font)
-        painter.drawText(self.rect(), Qt.AlignCenter, "TM Setter")
+        # 타이틀 레이블 (왼쪽 정렬)
+        title = QLabel("TM Setter")
+        title.setStyleSheet(f"""
+            QLabel {{
+                color: #95a5a6;
+                font-size: 14px;
+                font-weight: 500;
+                letter-spacing: 1px;
+            }}
+        """)
+        layout.addWidget(title)
+        
+        # 오른쪽 공간 채우기
+        layout.addStretch()
+        
+        # 배경색 설정
+        self.setStyleSheet(f"""
+            #header {{
+                background-color: #1e1e1e;
+                border-bottom: 1px solid #2d3436;
+            }}
+        """)
 
 
 class TMSetterMainWindow(QMainWindow):
@@ -93,13 +111,18 @@ class TMSetterMainWindow(QMainWindow):
         self.config = Config()
         self.session = SessionManager()
         self.jira_credentials = None
+        self.animation_helper = AnimationHelper()
+        self.first_load = True  # 초기 로드 플래그
         self.setup_ui()
         self.setup_views()
+        self.setup_shortcuts()
+        self.setup_status_bar()
         
     def setup_ui(self):
         """UI 설정"""
         self.setWindowTitle("TM Setter")
-        self.setFixedSize(900, 700)
+        self.setMinimumSize(800, 600)  # 최소 크기 설정
+        self.resize(900, 700)  # 기본 크기
         
         # 중앙 위젯
         central_widget = QWidget()
@@ -109,15 +132,17 @@ class TMSetterMainWindow(QMainWindow):
         main_layout = QVBoxLayout(central_widget)
         main_layout.setContentsMargins(0, 0, 0, 0)
         main_layout.setSpacing(0)
+        main_layout.setStretch(2, 1)  # 컨텐츠 영역이 늘어나도록 설정
         
         # 헤더
-        self.header = GradientHeader()
+        self.header = MinimalHeader()
         main_layout.addWidget(self.header)
         
         # 스텝 인디케이터 프레임
         step_frame = QFrame()
         step_frame.setObjectName("stepFrame")
-        step_frame.setFixedHeight(70)
+        step_frame.setMinimumHeight(70)
+        step_frame.setMaximumHeight(80)
         main_layout.addWidget(step_frame)
         
         # 스텝 인디케이터 레이아웃
@@ -150,7 +175,12 @@ class TMSetterMainWindow(QMainWindow):
         
         # 컨텐츠 영역 (스택 위젯)
         self.stack = QStackedWidget()
-        main_layout.addWidget(self.stack, 1)
+        self.stack.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        main_layout.addWidget(self.stack, 1)  # stretch factor 1
+        
+        # 로딩 인디케이터
+        self.loading_indicator = LoadingIndicator(central_widget)
+        self.loading_indicator.hide()
         
         # 테마 적용
         self.setStyleSheet(PyQtDarkTheme.get_stylesheet())
@@ -182,7 +212,9 @@ class TMSetterMainWindow(QMainWindow):
         self.show_view('login')
         
     def show_view(self, view_name: str):
-        """뷰 전환"""
+        """뷰 전환 (애니메이션 포함)"""
+        print(f"[DEBUG] show_view called with: {view_name}")
+        
         view_map = {
             'login': (self.login_view, 0),
             'db_code': (self.db_code_view, 1),
@@ -192,8 +224,30 @@ class TMSetterMainWindow(QMainWindow):
         
         if view_name in view_map:
             view, index = view_map[view_name]
-            self.stack.setCurrentIndex(index)
-            self.update_step_indicators(view_name)
+            print(f"[DEBUG] Switching to view: {view}, index: {index}")
+            
+            # 현재 위젯이 있을 때만 페이드 아웃 (초기 로드 시에는 없음)
+            current_widget = self.stack.currentWidget()
+            if current_widget and self.stack.currentIndex() >= 0 and not self.first_load:
+                # 페이드 애니메이션 효과
+                self.animation_helper.fade_out(current_widget)
+                QTimer.singleShot(150, lambda: self.switch_view(index, view_name))
+            else:
+                # 초기 로드 시에는 애니메이션 없이 바로 전환
+                self.switch_view(index, view_name)
+    
+    def switch_view(self, index: int, view_name: str):
+        """실제 뷰 전환"""
+        self.stack.setCurrentIndex(index)
+        
+        # 초기 로드가 아닐 때만 페이드 인 애니메이션 적용
+        if not self.first_load:
+            self.animation_helper.fade_in(self.stack.currentWidget())
+        else:
+            self.first_load = False
+            
+        self.update_step_indicators(view_name)
+        self.update_status_bar(f"{view_name.replace('_', ' ').title()} 화면")
             
     def update_step_indicators(self, view_name: str):
         """스텝 인디케이터 업데이트"""
@@ -245,6 +299,79 @@ class TMSetterMainWindow(QMainWindow):
             event.accept()
         else:
             event.ignore()
+    
+    def setup_shortcuts(self):
+        """키보드 단축키 설정"""
+        # Alt+1,2,3,4로 화면 전환
+        QShortcut(QKeySequence("Alt+1"), self, lambda: self.show_view('login'))
+        QShortcut(QKeySequence("Alt+2"), self, lambda: self.show_view('db_code'))
+        QShortcut(QKeySequence("Alt+3"), self, lambda: self.show_view('jira_issue'))
+        QShortcut(QKeySequence("Alt+4"), self, lambda: self.show_view('options'))
+        
+        # Ctrl+Q로 종료
+        QShortcut(QKeySequence("Ctrl+Q"), self, self.close)
+        
+        # F1로 도움말
+        QShortcut(QKeySequence("F1"), self, self.show_help)
+        
+        # F5로 새로고침
+        QShortcut(QKeySequence("F5"), self, self.refresh_current_view)
+    
+    def setup_status_bar(self):
+        """상태바 설정"""
+        self.status_bar = QStatusBar()
+        self.setStatusBar(self.status_bar)
+        self.status_bar.showMessage("준비 완료")
+        
+        # 현재 사용자 표시
+        self.user_label = QLabel("Guest")
+        self.status_bar.addPermanentWidget(self.user_label)
+        
+        # 연결 상태 표시
+        self.connection_label = QLabel("● 오프라인")
+        self.connection_label.setStyleSheet("color: #e74c3c;")
+        self.status_bar.addPermanentWidget(self.connection_label)
+    
+    def update_status_bar(self, message: str):
+        """상태바 메시지 업데이트"""
+        self.status_bar.showMessage(message, 5000)  # 5초간 표시
+    
+    def update_connection_status(self, connected: bool):
+        """연결 상태 업데이트"""
+        if connected:
+            self.connection_label.setText("● 연결됨")
+            self.connection_label.setStyleSheet("color: #27ae60;")
+        else:
+            self.connection_label.setText("● 오프라인")
+            self.connection_label.setStyleSheet("color: #e74c3c;")
+    
+    def update_user_info(self, username: str):
+        """사용자 정보 업데이트"""
+        self.user_label.setText(f"User: {username}")
+    
+    def show_help(self):
+        """도움말 표시"""
+        help_text = """
+        <h3>TM Setter 도움말</h3>
+        <p><b>키보드 단축키:</b></p>
+        <ul>
+            <li>Alt+1~4: 화면 이동</li>
+            <li>Ctrl+Q: 프로그램 종료</li>
+            <li>F1: 도움말</li>
+            <li>F5: 현재 화면 새로고침</li>
+        </ul>
+        <p><b>문의:</b> support@example.com</p>
+        """
+        QMessageBox.information(self, "도움말", help_text)
+    
+    def refresh_current_view(self):
+        """현재 화면 새로고침"""
+        current_widget = self.stack.currentWidget()
+        if hasattr(current_widget, 'refresh'):
+            current_widget.refresh()
+            self.update_status_bar("화면을 새로고침했습니다.")
+        else:
+            self.update_status_bar("새로고침할 내용이 없습니다.")
 
 
 class AsyncWorker(QThread):

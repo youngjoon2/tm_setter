@@ -2,14 +2,16 @@
 
 from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, 
-    QPushButton, QCheckBox, QFrame, QMessageBox
+    QPushButton, QCheckBox, QFrame, QMessageBox, QGraphicsDropShadowEffect,
+    QSizePolicy, QSpacerItem
 )
-from PyQt5.QtCore import Qt, pyqtSignal, QThread
-from PyQt5.QtGui import QFont
+from PyQt5.QtCore import Qt, pyqtSignal, QThread, QTimer, QRegExp
+from PyQt5.QtGui import QFont, QRegExpValidator, QColor
 import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from utils.pyqt_theme import PyQtDarkTheme
+from utils.animations import AnimationHelper
 from controllers.auth_controller import AuthController
 
 
@@ -54,68 +56,76 @@ class LoginView(QWidget):
         """UI 설정"""
         # 메인 레이아웃
         main_layout = QVBoxLayout(self)
+        main_layout.setContentsMargins(20, 20, 20, 20)
         main_layout.setAlignment(Qt.AlignCenter)
         
-        # 카드 컨테이너
+        # 상단 스페이서
+        main_layout.addSpacerItem(QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding))
+        
+        # 카드 컨테이너 (화면 크기에 맞게 조정)
         card = QFrame()
         card.setObjectName("loginCard")
-        card.setFixedSize(500, 550)
-        card.setStyleSheet(f"""
-            QFrame#loginCard {{
-                background-color: {PyQtDarkTheme.BG_CARD};
-                border: 1px solid {PyQtDarkTheme.BORDER_COLOR};
-                border-radius: 8px;
-            }}
+        card.setMinimumSize(380, 420)  # 최소 크기
+        card.setMaximumSize(500, 550)  # 최대 크기
+        card.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Preferred)
+        card.setStyleSheet("""
+            QFrame#loginCard {
+                background-color: #3e4547;
+                border: 2px solid #5a6c73;
+                border-radius: 10px;
+                padding: 10px;
+            }
         """)
         main_layout.addWidget(card)
         
+        # 하단 스페이서
+        main_layout.addSpacerItem(QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding))
+        
         # 카드 내부 레이아웃
         card_layout = QVBoxLayout(card)
-        card_layout.setContentsMargins(40, 40, 40, 40)
-        card_layout.setSpacing(20)
+        card_layout.setContentsMargins(25, 25, 25, 20)  # 여백 조정
+        card_layout.setSpacing(12)  # 간격 조정
         
-        # 아이콘과 타이틀
+        # 타이틀 컨테이너
         title_container = QWidget()
         title_layout = QVBoxLayout(title_container)
         title_layout.setAlignment(Qt.AlignCenter)
-        
-        # 사용자 아이콘
-        icon_frame = QFrame()
-        icon_frame.setFixedSize(60, 60)
-        icon_frame.setStyleSheet(f"""
-            QFrame {{
-                background-color: {PyQtDarkTheme.ACCENT_PRIMARY};
-                border-radius: 30px;
-            }}
-        """)
-        icon_layout = QVBoxLayout(icon_frame)
-        icon_label = QLabel("☺")
-        icon_label.setAlignment(Qt.AlignCenter)
-        icon_label.setStyleSheet(f"""
-            QLabel {{
-                color: white;
-                font-size: 30px;
-                background: transparent;
-            }}
-        """)
-        icon_layout.addWidget(icon_label)
-        title_layout.addWidget(icon_frame, alignment=Qt.AlignCenter)
+        title_layout.setSpacing(10)
         
         # 타이틀
         title = QLabel("로그인")
         title.setObjectName("title")
         title.setAlignment(Qt.AlignCenter)
+        title.setStyleSheet("color: white; font-size: 22px; font-weight: bold;")
         title_layout.addWidget(title)
         
         subtitle = QLabel("TM Setter에 접속하세요")
         subtitle.setObjectName("subtitle")
         subtitle.setAlignment(Qt.AlignCenter)
+        subtitle.setStyleSheet("color: #95a5a6; font-size: 12px;")
         title_layout.addWidget(subtitle)
         
         card_layout.addWidget(title_container)
         
         # Jira 인증 체크박스
         self.jira_checkbox = QCheckBox("Jira 인증 사용")
+        self.jira_checkbox.setStyleSheet("""
+            QCheckBox {
+                color: #ecf0f1;
+                font-size: 12px;
+            }
+            QCheckBox::indicator {
+                width: 16px;
+                height: 16px;
+                border: 1px solid #495057;
+                border-radius: 3px;
+                background-color: #34495e;
+            }
+            QCheckBox::indicator:checked {
+                background-color: #3498db;
+                border-color: #3498db;
+            }
+        """)
         self.jira_checkbox.toggled.connect(self.toggle_jira_url)
         card_layout.addWidget(self.jira_checkbox)
         
@@ -131,6 +141,22 @@ class LoginView(QWidget):
         self.url_entry = QLineEdit()
         self.url_entry.setText("https://")
         self.url_entry.setPlaceholderText("예: https://your-domain.atlassian.net")
+        self.url_entry.setMinimumHeight(38)  # 최소 높이
+        self.url_entry.setMaximumHeight(42)  # 최대 높이
+        self.url_entry.setStyleSheet("""
+            QLineEdit {
+                background-color: #52575c;
+                border: 1px solid #6c757d;
+                border-radius: 5px;
+                padding: 8px;
+                color: white;
+                font-size: 13px;
+            }
+            QLineEdit:focus {
+                border: 2px solid #3498db;
+                background-color: #5a6268;
+            }
+        """)
         url_layout.addWidget(self.url_entry)
         
         self.url_container.setVisible(False)
@@ -142,11 +168,27 @@ class LoginView(QWidget):
         id_layout.setContentsMargins(0, 0, 0, 0)
         
         id_label = QLabel("사용자 ID")
-        id_label.setStyleSheet(f"color: {PyQtDarkTheme.TEXT_SECONDARY}; font-weight: bold;")
+        id_label.setStyleSheet("color: #ecf0f1; font-weight: bold; font-size: 12px;")
         id_layout.addWidget(id_label)
         
         self.id_entry = QLineEdit()
         self.id_entry.setPlaceholderText("ID를 입력하세요")
+        self.id_entry.setMinimumHeight(38)  # 최소 높이
+        self.id_entry.setMaximumHeight(42)  # 최대 높이
+        self.id_entry.setStyleSheet("""
+            QLineEdit {
+                background-color: #52575c;
+                border: 1px solid #6c757d;
+                border-radius: 5px;
+                padding: 8px;
+                color: white;
+                font-size: 13px;
+            }
+            QLineEdit:focus {
+                border: 2px solid #3498db;
+                background-color: #5a6268;
+            }
+        """)
         id_layout.addWidget(self.id_entry)
         
         card_layout.addWidget(id_container)
@@ -157,12 +199,28 @@ class LoginView(QWidget):
         pw_layout.setContentsMargins(0, 0, 0, 0)
         
         pw_label = QLabel("비밀번호")
-        pw_label.setStyleSheet(f"color: {PyQtDarkTheme.TEXT_SECONDARY}; font-weight: bold;")
+        pw_label.setStyleSheet("color: #ecf0f1; font-weight: bold; font-size: 12px;")
         pw_layout.addWidget(pw_label)
         
         self.pw_entry = QLineEdit()
         self.pw_entry.setEchoMode(QLineEdit.Password)
         self.pw_entry.setPlaceholderText("비밀번호를 입력하세요")
+        self.pw_entry.setMinimumHeight(38)  # 최소 높이
+        self.pw_entry.setMaximumHeight(42)  # 최대 높이
+        self.pw_entry.setStyleSheet("""
+            QLineEdit {
+                background-color: #52575c;
+                border: 1px solid #6c757d;
+                border-radius: 5px;
+                padding: 8px;
+                color: white;
+                font-size: 13px;
+            }
+            QLineEdit:focus {
+                border: 2px solid #3498db;
+                background-color: #5a6268;
+            }
+        """)
         pw_layout.addWidget(self.pw_entry)
         
         card_layout.addWidget(pw_container)
@@ -174,11 +232,59 @@ class LoginView(QWidget):
         self.error_label.setWordWrap(True)
         card_layout.addWidget(self.error_label)
         
+        # 버튼 컨테이너
+        button_container = QWidget()
+        button_layout = QHBoxLayout(button_container)
+        button_layout.setContentsMargins(0, 10, 0, 0)
+        button_layout.setSpacing(10)  # 버튼 사이 간격
+        
         # 로그인 버튼
         self.login_button = QPushButton("로그인")
-        self.login_button.setFixedHeight(45)
+        self.login_button.setMinimumHeight(38)
+        self.login_button.setMaximumHeight(42)
+        self.login_button.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
+        self.login_button.setStyleSheet("""
+            QPushButton {
+                background-color: #3498db;
+                color: white;
+                border: none;
+                border-radius: 5px;
+                font-size: 14px;
+                font-weight: bold;
+                min-width: 90px;
+            }
+            QPushButton:hover {
+                background-color: #2980b9;
+            }
+            QPushButton:pressed {
+                background-color: #21618c;
+            }
+        """)
         self.login_button.clicked.connect(self.on_login)
-        card_layout.addWidget(self.login_button)
+        button_layout.addWidget(self.login_button)
+        
+        # 다음 버튼 (로그인 없이 진행)
+        self.next_button = QPushButton("다음 →")
+        self.next_button.setMinimumHeight(38)
+        self.next_button.setMaximumHeight(42)
+        self.next_button.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
+        self.next_button.setStyleSheet("""
+            QPushButton {
+                background-color: #495057;
+                color: white;
+                border: none;
+                border-radius: 5px;
+                font-size: 14px;
+                min-width: 90px;
+            }
+            QPushButton:hover {
+                background-color: #636e72;
+            }
+        """)
+        self.next_button.clicked.connect(self.on_next)
+        button_layout.addWidget(self.next_button)
+        
+        card_layout.addWidget(button_container)
         
         # 구분선
         line = QFrame()
@@ -188,16 +294,31 @@ class LoginView(QWidget):
         
         # 힌트
         hint_container = QWidget()
-        hint_layout = QHBoxLayout(hint_container)
+        hint_layout = QVBoxLayout(hint_container)
         hint_layout.setAlignment(Qt.AlignCenter)
+        hint_layout.setSpacing(2)
+        
+        # 아이콘과 첫 번째 줄
+        hint_line1_container = QWidget()
+        hint_line1_layout = QHBoxLayout(hint_line1_container)
+        hint_line1_layout.setAlignment(Qt.AlignCenter)
+        hint_line1_layout.setContentsMargins(0, 0, 0, 0)
         
         hint_icon = QLabel("ℹ")
         hint_icon.setStyleSheet(f"color: {PyQtDarkTheme.INFO};")
-        hint_layout.addWidget(hint_icon)
+        hint_line1_layout.addWidget(hint_icon)
         
-        hint_text = QLabel("로컬: ID='admin', PW='admin' | Jira: 실제 계정 사용")
-        hint_text.setStyleSheet(f"color: {PyQtDarkTheme.TEXT_MUTED}; font-size: {PyQtDarkTheme.FONT_SIZE_XS}px;")
-        hint_layout.addWidget(hint_text)
+        hint_text1 = QLabel("로컬: ID='admin', PW='admin'")
+        hint_text1.setStyleSheet(f"color: {PyQtDarkTheme.TEXT_MUTED}; font-size: {PyQtDarkTheme.FONT_SIZE_XS}px;")
+        hint_line1_layout.addWidget(hint_text1)
+        
+        # 두 번째 줄
+        hint_text2 = QLabel("Jira: 실제 계정 사용")
+        hint_text2.setStyleSheet(f"color: {PyQtDarkTheme.TEXT_MUTED}; font-size: {PyQtDarkTheme.FONT_SIZE_XS}px;")
+        hint_text2.setAlignment(Qt.AlignCenter)
+        
+        hint_layout.addWidget(hint_line1_container)
+        hint_layout.addWidget(hint_text2)
         
         card_layout.addWidget(hint_container)
         
@@ -286,6 +407,18 @@ class LoginView(QWidget):
         self.login_button.setText("로그인")
         self.pw_entry.clear()
         self.pw_entry.setFocus()
+        
+    def on_next(self):
+        """다음 버튼 클릭 (로그인 건너뛰기)"""
+        # 게스트로 진행
+        if self.parent_window:
+            self.parent_window.session.login(
+                user_id="guest",
+                user_name="Guest User",
+                token=None
+            )
+        # 다음 화면으로 이동
+        self.login_success.emit()
         
     def show_error(self, message: str):
         """에러 메시지 표시"""
